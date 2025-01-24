@@ -139,13 +139,12 @@ const login = async (req, res) => {
 // Change Password
 const changePassword = async (req, res) => {
     try {
-        const { email, currPassword, newPassword, confirmNewPassword } = req.body;
+        const { email, currPassword, newPassword, confirmPassword } = req.body;
 
-        if (!email || !currPassword || !newPassword || !confirmNewPassword) {
+        if (!email || !currPassword || !newPassword || !confirmPassword) {
             return sendResponse(res, 403, false, "All fields are required");
         }
-        // compare password
-        if (newPassword !== confirmNewPassword) {
+        if (newPassword !== confirmPassword) {
             return sendResponse(res, 400, false, "New passwords do not match");
         }
 
