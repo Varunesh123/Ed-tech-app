@@ -6,15 +6,35 @@ import uploadImageOnCloudinary from "../utlis/imageUploader.js";
 
 const createCourse = async (req, res) => {
     try {
-        const {courseName, courseDescription, whatYouWillLearn, price, category} = req.body;
+        const {
+            courseName, 
+            courseDescription, 
+            whatYouWillLearn, 
+            price, 
+            tag, 
+            category, 
+            status,
+            instructions
+        } = req.body;
 
         const thumbnail = req.files.thumbnailImage;
 
-        if(!courseName || !courseDescription || !whatYouWillLearn || !price || !category || !thumbnail){
+        if(
+            !courseName || 
+            !courseDescription || 
+            !whatYouWillLearn || 
+            !price ||  
+            !thumbnail ||
+            !tag ||
+            !category
+        ) {
             return sendResponse(res, 400, false, "All fields are required");
         }
+        if(!status || status === undefined){
+            status = "Draft";
+        }
         const userId = req.user.id;
-        const instructorDetails = await User.findById(userId);
+        const instructorDetails = await User.findById(userId, {accountType: "Instructor"});
         console.log("Instructor Details", instructorDetails);
 
         if(!instructorDetails){
@@ -32,8 +52,11 @@ const createCourse = async (req, res) => {
             instructor: instructorDetails._id,
             whatYouWillLearn: whatYouWillLearn,
             price,
+            tag: tag,
             category: categoryDetails._id,
             thumbnail: thumbnailImage.secure_url,
+            status: status,
+            instructions: instructions
         });
 
         await User.findByIdAndUpdate(
@@ -45,6 +68,15 @@ const createCourse = async (req, res) => {
             },
             {new: true}
         );
+        await Category.findByIdAndUpdate(
+            {_id: category},
+            {
+                $push: {
+                    course: newCourse._id
+                }
+            },
+            {new: true}
+        )
         return sendResponse(res, 200, true, "Course created successfully", newCourse);
     } catch (error) {
         console.error(error);
@@ -54,12 +86,22 @@ const createCourse = async (req, res) => {
 
 const showAllCourses = async(req, res) => {
     try {
-        const allCourses = await Course.find({});
+        const allCourses = await Course.find(
+            {},
+            {
+                courseName: true,
+                price: true,
+                thumbnail: true,
+                instructor: true,
+                ratingAndReviews: true,
+                studentsEnrolled: true,
+            }
+        ).populate("instructor").exec();
 
         return sendResponse(res, 200, true, "All Courses fetched successfully", allCourses);
     } catch (error) {
         console.log(error);
-        return sendResponse(res, 500, false, "Unable to fetched all course");
+        return sendResponse(res, 404, false, "Unable to fetched all course");
     }
 }
 

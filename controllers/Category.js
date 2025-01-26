@@ -29,7 +29,7 @@ const showAllCategory = async(req, res) => {
         return sendResponse(res, 500, false, error.message);
     }
 }
-
+// TODO: CategoryPageDetails
 export {
     createCategory,
     showAllCategory

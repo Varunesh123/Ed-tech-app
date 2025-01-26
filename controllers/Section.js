@@ -18,7 +18,12 @@ const createSection = async(req, res) => {
                                                 },
                                             },
                                             {new: true}
-                                        );
+                                        ).populate({
+                                            path: "courseContent",
+                                            papulate: {
+                                                path: "subsection"
+                                            }
+                                        }).exec();
 
         return sendResponse(res, 200, true, "Section created successfully");
     } catch (error) {
@@ -36,7 +41,7 @@ const updateSection = async(req, res) => {
                                         {sectionName},
                                         {new: true}
                                     );
-        return sendResponse(res, 200, true, "Section updated successfully");
+        return sendResponse(res, 200, true, section);
     } catch (error) {
         console.log(error);
         return sendResponse(res, 500, false, "Unable to update Section");
@@ -44,11 +49,11 @@ const updateSection = async(req, res) => {
 }
 const deleteSection = async(req, res) => {
     try {
-        const {sectionId} = req.body;
+        const {sectionId} = req.params;
         if(!sectionId){
             return sendResponse(res, 400, false, "Section id is required");
         }
-        const section = await Section.findByIdAndDelete(sectionId);
+        await Section.findByIdAndDelete(sectionId);
 
         return sendResponse(res, 200, true, "Section deleted successfully");
     } catch (error) {
