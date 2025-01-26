@@ -1,36 +1,69 @@
-import Tag from '../models/Tag.js';
-import sendResponse from '../utlis/sendResponse.js';
+import sendResponse from "../utlis/sendResponse.js";
+import Tag from "../models/Tag.js";
+import User from "../models/User.js";
+import Course from "../models/Course.js";
+import uploadImageOnCloudinary from "../utlis/imageUploader.js";
 
-const createCourse = async(req, res) => {
+const createCourse = async (req, res) => {
     try {
-        const { name, description } = req.body;
+        const {courseName, courseDescription, whatYouWillLearn, price, tag} = req.body;
 
-        if(!name || !description){
+        const thumbnail = req.files.thumbnailImage;
+
+        if(!courseName || !courseDescription || !whatYouWillLearn || !price || !tag || !thumbnail){
             return sendResponse(res, 400, false, "All fields are required");
         }
-        // Create entry in DB
-        const tagDetails = await Tag.create({
-            name: name,
-            description: description
-        });
-        console.log(tagDetails);
+        const userId = req.user.id;
+        const instructorDetails = await User.findById(userId);
+        console.log("Instructor Details", instructorDetails);
 
-        return sendResponse(res, 200, true, "Tag created successfully");
+        if(!instructorDetails){
+            return sendResponse(res, 400, false, "Instructor details not found");
+        }
+        const tagDetails = await Tag.findById(tag);
+        if(!tagDetails){
+            return sendResponse(res, 400, false, "Tag detail is missing");
+        }
+        const thumbnailImage = await uploadImageOnCloudinary(thumbnail, process.env.FOLDER_NAME);
+
+        const newCourse = await Course.create({
+            courseName,
+            courseDescription,
+            instructor: instructorDetails._id,
+            whatYouWillLearn: whatYouWillLearn,
+            price,
+            tag: tagDetails._id,
+            thumbnail: thumbnailImage.secure_url,
+        });
+
+        await User.findByIdAndUpdate(
+            {_id: instructorDetails._id},
+            {
+                $push: {
+                    courses: newCourse._id,
+                }
+            },
+            {new: true}
+        );
+        return sendResponse(res, 200, true, "Course created successfully", newCourse);
     } catch (error) {
-        return sendResponse(res, 500, false, error.message)
+        console.error(error);
+        return sendResponse(res, 500, false, "Failed to create Course");
     }
 }
-const showAllCourse = async(req, res) => {
-    try {
-        const allTags = await Tag.find({}, {name: true, description: true});
 
-        return sendResponse(res, 200, true, "All tags returned successfully", allTags);
+const showAllCourses = async(req, res) => {
+    try {
+        const allCourses = await Course.find({});
+
+        return sendResponse(res, 200, true, "All Courses fetched successfully");
     } catch (error) {
-        return sendResponse(res, 500, false, error.message);
+        console.log(error);
+        return sendResponse(res, 500, false, "Unable to fetched all course");
     }
 }
 
 export {
-    createCourse,
-    showAllCourse
+    createCourse, 
+    showAllCourses
 }
