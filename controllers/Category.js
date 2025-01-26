@@ -1,7 +1,7 @@
-import Tag from '../models/Tag.js';
+import Category from '../models/Category.js';
 import sendResponse from '../utlis/sendResponse.js';
 
-const createTags = async(req, res) => {
+const createCategory = async(req, res) => {
     try {
         const { name, description } = req.body;
 
@@ -9,28 +9,28 @@ const createTags = async(req, res) => {
             return sendResponse(res, 400, false, "All fields are required");
         }
         // Create entry in DB
-        const tagDetails = await Tag.create({
+        const categoryDetails = await Category.create({
             name: name,
             description: description
         });
-        console.log(tagDetails);
+        console.log(categoryDetails);
 
-        return sendResponse(res, 200, true, "Tag created successfully");
+        return sendResponse(res, 200, true, "Category created successfully");
     } catch (error) {
         return sendResponse(res, 500, false, error.message)
     }
 }
-const showAllTags = async(req, res) => {
+const showAllCategory = async(req, res) => {
     try {
-        const allTags = await Tag.find({}, {name: true, description: true});
+        const allCategory = await Category.find({}, {name: true, description: true});
 
-        return sendResponse(res, 200, true, "All tags returned successfully", allTags);
+        return sendResponse(res, 200, true, "All categories returned successfully", allCategory);
     } catch (error) {
         return sendResponse(res, 500, false, error.message);
     }
 }
 
 export {
-    createTags,
-    showAllTags
+    createCategory,
+    showAllCategory
 }

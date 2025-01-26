@@ -1,16 +1,16 @@
 import sendResponse from "../utlis/sendResponse.js";
-import Tag from "../models/Tag.js";
+import Category from "../models/Category.js";
 import User from "../models/User.js";
 import Course from "../models/Course.js";
 import uploadImageOnCloudinary from "../utlis/imageUploader.js";
 
 const createCourse = async (req, res) => {
     try {
-        const {courseName, courseDescription, whatYouWillLearn, price, tag} = req.body;
+        const {courseName, courseDescription, whatYouWillLearn, price, category} = req.body;
 
         const thumbnail = req.files.thumbnailImage;
 
-        if(!courseName || !courseDescription || !whatYouWillLearn || !price || !tag || !thumbnail){
+        if(!courseName || !courseDescription || !whatYouWillLearn || !price || !category || !thumbnail){
             return sendResponse(res, 400, false, "All fields are required");
         }
         const userId = req.user.id;
@@ -20,9 +20,9 @@ const createCourse = async (req, res) => {
         if(!instructorDetails){
             return sendResponse(res, 400, false, "Instructor details not found");
         }
-        const tagDetails = await Tag.findById(tag);
-        if(!tagDetails){
-            return sendResponse(res, 400, false, "Tag detail is missing");
+        const categoryDetails = await Category.findById(category);
+        if(!categoryDetails){
+            return sendResponse(res, 400, false, "Category detail is missing");
         }
         const thumbnailImage = await uploadImageOnCloudinary(thumbnail, process.env.FOLDER_NAME);
 
@@ -32,7 +32,7 @@ const createCourse = async (req, res) => {
             instructor: instructorDetails._id,
             whatYouWillLearn: whatYouWillLearn,
             price,
-            tag: tagDetails._id,
+            category: categoryDetails._id,
             thumbnail: thumbnailImage.secure_url,
         });
 
@@ -56,7 +56,7 @@ const showAllCourses = async(req, res) => {
     try {
         const allCourses = await Course.find({});
 
-        return sendResponse(res, 200, true, "All Courses fetched successfully");
+        return sendResponse(res, 200, true, "All Courses fetched successfully", allCourses);
     } catch (error) {
         console.log(error);
         return sendResponse(res, 500, false, "Unable to fetched all course");
