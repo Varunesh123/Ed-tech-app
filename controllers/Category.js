@@ -1,5 +1,6 @@
 import Category from '../models/Category.js';
 import sendResponse from '../utlis/sendResponse.js';
+import Course from "../models/Course.js";
 
 const createCategory = async(req, res) => {
     try {
@@ -29,8 +30,46 @@ const showAllCategory = async(req, res) => {
         return sendResponse(res, 500, false, error.message);
     }
 }
-// TODO: CategoryPageDetails
+const categoryPageDetails = async(req, res) => {
+    try {
+        const { categoryId } = req.body;
+
+        const selectedCategory = await Category.findById(categoryId).populate("courses").exec();
+        console.log(selectedCategory);
+        
+        if(!selectedCategory){
+            console.log("category not found");
+            return sendResponse(res, 404, false, "Category not found");
+        }
+        if(selectedCategory.courses.length === 0){
+            return sendResponse(res, 404, false, "No course found for this category");
+        }
+        const selectedCourse = await selectedCategory.courses;
+
+        const categoriesExceptSelected = await Course.find(
+                                                {_id: {$ne: categoryId}
+                                            }).populate("courses");
+
+        let differentCourses = []
+
+        for(const category of categoriesExceptSelected){
+            differentCourses.push(...category.courses);
+        }
+        const allCategories = await Category.find({}).populate("courses");
+        const allCourses = allCategories.flatMap((category) => category.courses);
+        const mostSellingCourses = allCourses.sort((a,b) => b.sold - a.sold).slice(0,10);
+
+        return res.status(200).json({
+            selectedCourse: selectedCourse,
+            differentCourses: differentCourses,
+            mostSellingCourses: mostSellingCourses
+        });
+    } catch (error) {
+        return sendResponse(res, 500, false, "Internal server error");
+    }
+}
 export {
     createCategory,
-    showAllCategory
+    showAllCategory,
+    categoryPageDetails
 }
