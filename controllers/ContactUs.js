@@ -2,7 +2,7 @@ import mailSender from '../utlis/mailSender.js';
 import contactUsEmail from '../mail/template/contactUsEmail.js';
 import sendResponse from '../utlis/sendResponse.js';
 
-const contactUsCotroller = async(req, res) => {
+const contactUsController = async(req, res) => {
     const {email, firstName, lastName, message, phoneNo, coutrycode} = req.body
     console.log(req.body);
     try {
@@ -18,4 +18,4 @@ const contactUsCotroller = async(req, res) => {
         return sendResponse(res, 500, false, error.message);
     }    
 }
-export default contactUsCotroller
+export default contactUsController

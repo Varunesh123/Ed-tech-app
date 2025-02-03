@@ -56,4 +56,4 @@ const courseSchema = new mongoose.Schema({
         enum: ["Draft", "Publishesd"]
     }
 })
-module.exports = mongoose.Schema("Course", courseSchema)
+export default mongoose.Schema("Course", courseSchema)

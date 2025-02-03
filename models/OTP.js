@@ -30,4 +30,4 @@ otpSchema.pre("save", async function(params) {
     next();
 })
 
-module.exports = mongoose.model("OTP", otpSchema);
+export default mongoose.model("OTP", otpSchema);

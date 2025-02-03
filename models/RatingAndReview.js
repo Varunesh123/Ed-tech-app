@@ -21,4 +21,4 @@ const ratingAndReview = new mongoose.Schema({
         index: true
     }
 })
-module.exports = mongoose.model("RatingAndReview", ratingAndReview);
+export default mongoose.model("RatingAndReview", ratingAndReview);
