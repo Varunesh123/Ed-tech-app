@@ -3,6 +3,7 @@ import Category from "../models/Category.js";
 import User from "../models/User.js";
 import Course from "../models/Course.js";
 import uploadImageOnCloudinary from "../utlis/imageUploader.js";
+import { populate } from "dotenv";
 
 const createCourse = async (req, res) => {
     try {
@@ -104,8 +105,90 @@ const showAllCourses = async(req, res) => {
         return sendResponse(res, 404, false, "Unable to fetched all course");
     }
 }
+const editCourse = async(req, res) => {
+    try {
+        const {courseId} = req.user;
+        const updates = req.body;
 
+        const course = await Course.findById(courseId);
+
+        if(!course){
+            return sendResponse(res, 404, false, "Course not found");
+        }
+        if(req.files){
+            console.log("thumbnail update");
+            const thumbnail = req.files.thumbnailImage;
+            const thumbnailImage = await uploadImageOnCloudinary(
+                                        thumbnail,
+                                        process.env.FOLDER_NAME
+                                    )
+            course.thumbnail = thumbnailImage.secure_url
+        }
+        for(const update in updates){
+            if(updates.hasOwnProperty(update)){
+                if(update === "tag" || update === "instructions"){
+                    course[update] = JSON.parse(updates[update])
+                } else {
+                    course[update] = updates[update]
+                }
+            }
+        }
+        await course.save();
+
+        const updatedCourse = await findOne({_id: courseId})
+                                        .populate({
+                                            path: "instructor",
+                                            populate: {
+                                                path: "addictionalDetails"
+                                            }
+                                        })
+                                        .populate("category")
+                                        .populate("ratingAndReviews")
+                                        .populate({
+                                            path: "courseContent",
+                                            populate: {
+                                                path: "subSection"
+                                            }
+                                        })
+                                        .exec();
+    } catch (error) {
+        
+    }
+}
+const getCourseDetails = async(req, res) => {
+    try {
+        
+    } catch (error) {
+        
+    }
+}
+const getFullCourseDEtails = async(req, res) => {
+    try {
+        
+    } catch (error) {
+        
+    }
+}
+const getInstructorCourses = async(req, res) => {
+    try {
+        
+    } catch (error) {
+        
+    }
+}
+const deleteCourse = async(req, res) => {
+    try {
+        
+    } catch (error) {
+        
+    }
+}
 export {
     createCourse, 
-    showAllCourses
+    showAllCourses,
+    editCourse,
+    getCourseDetails,
+    getFullCourseDEtails,
+    getInstructorCourses,
+    deleteCourse
 }
