@@ -3,7 +3,9 @@ import Category from "../models/Category.js";
 import User from "../models/User.js";
 import Course from "../models/Course.js";
 import uploadImageOnCloudinary from "../utlis/imageUploader.js";
-import { populate } from "dotenv";
+import Section from "../models/Section.js";
+import SubSection from "../models/SubSection.js";
+
 
 const createCourse = async (req, res) => {
     try {
@@ -84,7 +86,6 @@ const createCourse = async (req, res) => {
         return sendResponse(res, 500, false, "Failed to create Course");
     }
 }
-
 const showAllCourses = async(req, res) => {
     try {
         const allCourses = await Course.find(
@@ -151,36 +152,191 @@ const editCourse = async(req, res) => {
                                             }
                                         })
                                         .exec();
+
+        return sendResponse(res, 201, true, updatedCourse);
     } catch (error) {
-        
+        console.log(error.message);
+        return sendResponse(res, 500, false, "Unable to update course");
     }
 }
 const getCourseDetails = async(req, res) => {
     try {
-        
+        const { courseId } = req.body;
+        const courseDetails = await Course.findOne({
+                                    _id : courseId,
+                                }) 
+                                .populate({
+                                    path: "instructor",
+                                    populate: {
+                                        path: "additionalDetails"
+                                    }
+                                })
+                                .populate("category")
+                                .populate("ratingAndReviews")
+                                .populate({
+                                    path: "courseContent",
+                                    populate: {
+                                        path: "subSection",
+                                        select: "-videoUrl"
+                                    }
+                                })
+                                .exec();
+        if(!courseDetails){
+            return res.status(400).json({
+                success: false,
+                message: `Could not find course with id: ${courseId}`
+            })
+        }
+        let totalDurationInseconds = 0;
+        courseDetails.courseContent.forEach((content)=> {
+            content.subSection.forEach((subSection) => {
+                const timeDurationInSeconds = parseInt(subSection.timeDuration)
+                totalDurationInseconds += timeDurationInSeconds
+            })
+        })
+        const totalDuration = convertSecondsToDuration(totalDurationInseconds)
+
+        return res.status(200).json({
+            success: true,
+            data: {
+                courseDetails,
+                totalDuration
+            }
+        })
     } catch (error) {
-        
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        })
     }
 }
 const getFullCourseDEtails = async(req, res) => {
     try {
-        
+        const { courseId } = req.body;
+        const userId = req.user.id;
+        const courseDetails = await Course.findOne({
+                                    _id : courseId,
+                                }) 
+                                .populate({
+                                    path: "instructor",
+                                    populate: {
+                                        path: "additionalDetails"
+                                    }
+                                })
+                                .populate("category")
+                                .populate("ratingAndReviews")
+                                .populate({
+                                    path: "courseContent",
+                                    populate: {
+                                        path: "subSection",
+                                        select: "-videoUrl"
+                                    }
+                                })
+                                .exec();
+
+
+        if(!courseDetails){
+            return res.status(400).json({
+                success: false,
+                message: `Could not find course with id: ${courseId}`
+            })
+        }
+        let totalDurationInseconds = 0;
+        courseDetails.courseContent.forEach((content)=> {
+            content.subSection.forEach((subSection) => {
+                const timeDurationInSeconds = parseInt(subSection.timeDuration)
+                totalDurationInseconds += timeDurationInSeconds
+            })
+        })
+        const totalDuration = convertSecondsToDuration(totalDurationInseconds)
+
+        let courseProgressCount = await CourseProgress.findOne({
+            courseID: courseId,
+            userId: userId
+        });
+        return res.status(200).json({
+            success: true,
+            data: {
+                courseDetails,
+                totalDuration,
+                completedVideos: courseProgressCount?.completedVideos ?
+                courseProgressCount?.completedVideos : [],
+            }
+        })
     } catch (error) {
-        
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        })
     }
 }
 const getInstructorCourses = async(req, res) => {
     try {
-        
+        const instructorId = req.user.id
+
+        const instructorCourses = await Course.find({
+                                        intructor: instructorId,
+                                    }).sort({ createdAt: -1})
+
+        return res.status(200).json({
+            success: true,
+            data: instructorCourses
+        })
     } catch (error) {
-        
+        return res.status(500).json({
+            success: false,
+            message: "Failed to retrieve instructor courses",
+            error: error.message
+        })
     }
 }
 const deleteCourse = async(req, res) => {
     try {
-        
+        const { courseId } = req.body;
+
+        const course = await Course.findById(courseId);
+        if(!course){
+            return res.status(404).json({
+                message: "Course not found"
+            })
+        }
+        const studentsEnrolled = course.studentsEnrolled
+
+        for(const studentId of studentsEnrolled){
+            await User.findByIdAndUpdate(
+                studentId,
+                {
+                    $pull: {
+                        courses: courseId
+                    }
+                }
+            )
+        }
+        const courseSections = course.courseContent
+
+        for(const sectionId of courseSections){
+            const section = await Section.findById(sectionId);
+            if(section){
+                const subSections = section.subSection
+
+                for(const subsectionId of subSections){
+                    await SubSection.findByIdAndDelete(subsectionId)
+                }
+            }
+            await Section.findByIdAndDelete(sectionId)
+        }
+        await Course.findByIdAndDelete(courseId)
+
+        return res.status(200).json({
+            success: true,
+            message: "Course deleted successfully"
+        })
     } catch (error) {
-        
+        return res.status(500).json({
+            success: false,
+            message: "Unable to Course delete",
+            error: error.message
+        })
     }
 }
 export {
