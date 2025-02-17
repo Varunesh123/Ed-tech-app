@@ -1,8 +1,8 @@
 import sendResponse from "../utlis/sendResponse.js";
 import User from "../models/User.js";
 import Profile from "../models/Profile.js";
-import { uploadImageOnCloudinary } from "../utlis/imageUploader.js";
-import { convertSecondsToDuration } from "../utlis/secToDuration.js";
+import uploadImageOnCloudinary from "../utlis/imageUploader.js";
+import convertSecondsToDuration  from "../utlis/secToDuration.js";
 import CourseProgress from "../models/CourseProgess.js";
 
 const updateProfile = async(req, res) => {
@@ -175,5 +175,6 @@ export {
     deleteProfile,
     getAllUserDetails,
     updateDisplayPicture,
-    getEnrolledCourses
+    getEnrolledCourses,
+    instructorDashboard
 }

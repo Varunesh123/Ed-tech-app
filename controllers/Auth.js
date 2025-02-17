@@ -11,6 +11,7 @@ dotenv.config();
 
 // Send OTP
 const sendOTP = async (req, res) => {
+    console.log("Sending OTP");
     try {
         const { email } = req.body;
 
@@ -26,6 +27,7 @@ const sendOTP = async (req, res) => {
         });
 
         let result = await OTP.findOne({ otp });
+        console.log(result);
         while (result) {
             otp = otpGenerator.generate(6, {
                 lowerCaseAlphabets: false,
@@ -34,10 +36,18 @@ const sendOTP = async (req, res) => {
             });
             result = await OTP.findOne({ otp });
         }
-
         const otpPayload = { email, otp };
+
+        console.log(otpPayload);       
         await OTP.create(otpPayload);
-        return sendResponse(res, 200, true, "OTP sent successfully", otp);
+
+        // return sendResponse(res, 200, true, "OTP sent successfully", otp);
+
+        return res.status(200).json({
+            success: true,
+            message: "Otp sent successfully",
+            otp
+        })
     } catch (error) {
         console.error(error);
         return sendResponse(res, 400, false, "Unable to send OTP");

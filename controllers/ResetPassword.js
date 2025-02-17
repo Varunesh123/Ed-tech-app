@@ -1,9 +1,9 @@
-import sendResponse from "../utlis/sendResponse";
+import sendResponse from "../utlis/sendResponse.js";
 import User from '../models/User.js';
-import mailSender from "../utlis/mailSender";
+import mailSender from "../utlis/mailSender.js";
 import bcrypt from 'bcrypt'
 
-const resetPassordToken = async(req, res) => {
+const resetPasswordToken = async(req, res) => {
     try {
         const email = req.body.email;
         const user = await User.findOne({email});
@@ -28,7 +28,7 @@ const resetPassordToken = async(req, res) => {
         return sendResponse(res, 500, false, 'Something went wrong while sending reset pwd mail');
     }
 }
-const resetPassord = async(req, res) => {
+const resetPassword = async(req, res) => {
     try {
         const {password, confirmPassword, token} = req.body;
         
@@ -58,6 +58,6 @@ const resetPassord = async(req, res) => {
 }
 
 export {
-    resetPassord,
-    resetPassordToken
+    resetPassword,
+    resetPasswordToken
 }

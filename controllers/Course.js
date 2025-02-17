@@ -210,7 +210,7 @@ const getCourseDetails = async(req, res) => {
         })
     }
 }
-const getFullCourseDEtails = async(req, res) => {
+const getFullCourseDetails = async(req, res) => {
     try {
         const { courseId } = req.body;
         const userId = req.user.id;
@@ -344,7 +344,7 @@ export {
     showAllCourses,
     editCourse,
     getCourseDetails,
-    getFullCourseDEtails,
+    getFullCourseDetails,
     getInstructorCourses,
     deleteCourse
 }

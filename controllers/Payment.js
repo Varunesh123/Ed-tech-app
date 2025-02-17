@@ -111,8 +111,12 @@ const verifySignature = async(req, res) => {
         return sendResponse(res, 400, false, "Invalid request");
     }
 }
+const sendPaymentSuccessEmail = async(req, res) => {
+    // TODO
+}
 
 export {
     capturePayment,
-    verifySignature
+    verifySignature,
+    sendPaymentSuccessEmail
 }

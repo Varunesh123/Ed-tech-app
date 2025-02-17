@@ -30,7 +30,7 @@ const courseSchema = new mongoose.Schema({
     price: {
         type: Number
     },
-    thumnail : {
+    thumbnail : {
         type: String
     },
     tag: {
@@ -53,7 +53,7 @@ const courseSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ["Draft", "Publishesd"]
+        enum: ["Draft", "Published"]
     }
 })
-export default mongoose.Schema("Course", courseSchema)
+export default mongoose.model("Course", courseSchema)

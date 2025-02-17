@@ -1,4 +1,4 @@
-function covertSecondsToDuration(totalSeconds){
+function convertSecondsToDuration(totalSeconds){
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60)
     const seconds = Math.floor((totalSeconds % 3600) % 60)
@@ -12,6 +12,4 @@ function covertSecondsToDuration(totalSeconds){
     }
   }
   
-  export {
-    covertSecondsToDuration
-  }
+export default convertSecondsToDuration;
