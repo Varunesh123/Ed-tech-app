@@ -12,8 +12,9 @@ const auth = async(req, res, next) => {
         }
         try {
             const payload = jwt.verify(token, process.env.JWT_SECRET);
-            console.log(payload);
-            req.user = token;
+            // console.log("payload",payload);
+            req.user = payload;
+
         } catch (error) {
             return sendResponse(res, 400, false, "Invalid token");
         }

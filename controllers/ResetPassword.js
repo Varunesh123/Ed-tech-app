@@ -21,7 +21,7 @@ const resetPasswordToken = async(req, res) => {
         );
         const url = `http://localhost:3000/update-password/${token}`;
 
-        await mailSender(email, "Paasword reset link", `Password Reset Link: ${url}`);
+        await mailSender(email, "Password reset link", `Password Reset Link: ${url}`);
 
         return sendResponse(res, 200, true, 'Email sent successfully, please check email and change pwd');
     } catch (error) {
@@ -31,7 +31,7 @@ const resetPasswordToken = async(req, res) => {
 const resetPassword = async(req, res) => {
     try {
         const {password, confirmPassword, token} = req.body;
-        
+        console.log("token", token)
         if(password !== confirmPassword){
             return sendResponse(res, 401, false, "Password does not match");
         }
@@ -40,7 +40,7 @@ const resetPassword = async(req, res) => {
         if(!user){
             return sendResponse(res, 401, false, "Invalid token");
         }
-        if(user.resetPassworsExpires < Date.now()){
+        if(user.resetPasswordExpires < Date.now()){
             return sendResponse(res, 401, false, "Token is expired, please regenerate your token");
         }
         const hashedPassword = await bcrypt.hash(password, 10);

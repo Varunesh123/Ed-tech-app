@@ -32,10 +32,11 @@ const updateProfile = async(req, res) => {
 }
 const deleteProfile = async(req, res) => {
     try {
-        const {userId} = req.user.id;
+        const userId = req.user.id;
+        // console.log('userId',userId);
         const userDetails = await User.findById(userId);
         if(!userDetails){
-            return sendResponse(res, 400, false, "User not found");
+            return sendResponse(res, 404, false, "User not found");
         }
         await Profile.findByIdAndDelete({_id: userDetails.additionalDetails});
 
@@ -49,9 +50,13 @@ const deleteProfile = async(req, res) => {
 }
 const getAllUserDetails = async(req, res) => {
     try {
+        // console.log("req", req.user);
         const userId = req.user.id;
         const userDetails = await User.findById(userId).populate("additionalDetails").exec();
-
+        // console.log("userDetails",userDetails);
+        if(!userDetails){
+            return sendResponse(res, 404, false, "User not found");
+        }
         return sendResponse(res, 200, true, "All details of user fetched successfully", userDetails);
     } catch (error) {
         console.log(error);
@@ -68,7 +73,7 @@ const updateDisplayPicture = async(req, res) => {
                             1000,
                             1000
                         )
-        console.log(image);
+        // console.log(image);
         const updateProfile = await User.findByIdAndUpdate(
             {_id: userId},
             { image: image.secure_url },

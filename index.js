@@ -1,4 +1,5 @@
 import express from 'express';
+import morgan from 'morgan';
 import database from './config/database.js';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
@@ -17,8 +18,9 @@ database();
 
 const app = express();
 
+app.use(morgan("dev"));
 app.use(express.json());
-app.use(cookieParser);
+app.use(cookieParser());
 app.use(cors({
     origin: "http://localhost:3000",
     credentials: true
@@ -32,10 +34,10 @@ cloudinaryConnect()
 
 app.use('/api/v1/auth', userRoute);
 app.use('/api/v1/profile', profileRoute);
+app.use('/api/v1/course', courseRoute);
 // app.use('/api/v1/payment', paymentRoute);
-app.use('/auth/v1/course', courseRoute);
 
-app.get('/', (req, res) => {
+app.get('/api/v1/', (req, res) => {
     return res.json({
         success: true,
         message: 'Your server is running Dana dan.....'

@@ -14,9 +14,9 @@ const router = express.Router();
 
 router.post('/getEnrolledCourses', auth, getEnrolledCourses);
 router.put('/updateDisplayPicture', auth, updateDisplayPicture)
-router.get('/instructorDashboard', auth, isInstructor, instructorDashboard);
+router.get('/instructorDashboard', auth, isInstructor, instructorDashboard); 
 
-router.delete('/deleteProfile', auth, deleteProfile);
+router.delete('/deleteProfile', auth, deleteProfile); 
 router.put('/updateProfile', auth, updateProfile);
 router.get('/getUserDetails', auth, getAllUserDetails);
 

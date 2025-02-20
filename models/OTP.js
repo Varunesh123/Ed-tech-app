@@ -25,9 +25,14 @@ async function sendVerificationEmail(email, otp) {
         throw error;
     }
 }
-otpSchema.pre("save", async function(params) {
-    await sendVerificationEmail(this.email, this.otp);
-    next();
-})
+otpSchema.pre("save", async function(next) {
+    try {
+        await sendVerificationEmail(this.email, this.otp);
+        next(); // ✅ Call next to proceed with saving the document
+    } catch (error) {
+        next(error); // ❌ Pass error to stop saving if email fails
+    }
+});
+
 
 export default mongoose.model("OTP", otpSchema);
