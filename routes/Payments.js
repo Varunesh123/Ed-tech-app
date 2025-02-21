@@ -6,7 +6,6 @@ import {
     sendPaymentSuccessEmail
 } from '../controllers/Payment.js';
 
-
 const router = express.Router();
 
 router.post('/capturePayment', auth, isStudent, capturePayment);

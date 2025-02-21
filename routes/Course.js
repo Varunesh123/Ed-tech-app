@@ -36,23 +36,23 @@ import {
 
 const router = express.Router();
 
-router.post('/createCourse', auth, isInstructor, createCourse);
-router.get('/getAllCourses', showAllCourses);
-router.post('/getCourseDetails', auth, getCourseDetails);
-router.post('/getFullCoureDetails', auth, getFullCourseDetails);
+router.post('/createCourse', auth, isInstructor, createCourse); //Done
+router.get('/getAllCourses', showAllCourses); 
+router.post('/getCourseDetails', auth, getCourseDetails); //Done
+router.post('/getFullCoureDetails', auth, getFullCourseDetails); 
 router.post('/editCourse', auth, isInstructor, editCourse);
-router.get('/getInstrctorCourses', auth, isInstructor, getInstructorCourses);
+router.get('/getInstructorCourses', auth, isInstructor, getInstructorCourses);
 router.delete('/deleteCourse', deleteCourse);
 
-router.post('/addSection', auth, isInstructor, createSection);
+router.post('/addSection', auth, isInstructor, createSection); 
 router.post('/updateSection', auth, isInstructor, updateSection);
 router.post('/deleteSection', auth, isInstructor, deleteSection);
 
-router.post('updateSubSection', auth, isInstructor, updateSubsection);
+router.post('/updateSubSection', auth, isInstructor, updateSubsection);
 router.post('/deleteSubSection', auth, isInstructor, deleteSubsection);
 router.post('/addSubSection', auth, isInstructor, createSubsection);
 
-router.post('/createCategory', auth, isAdmin, createCategory);
+router.post('/createCategory', auth, isAdmin, createCategory); //Done
 router.get('/showAllCategories', showAllCategory);
 router.post('/getCategoryPageDetails', categoryPageDetails);
 

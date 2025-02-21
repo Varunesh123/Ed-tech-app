@@ -5,10 +5,12 @@ import Course from "../models/Course.js";
 import uploadImageOnCloudinary from "../utlis/imageUploader.js";
 import Section from "../models/Section.js";
 import SubSection from "../models/SubSection.js";
+import convertSecondsToDuration from '../utlis/secToDuration.js';
 
 
 const createCourse = async (req, res) => {
     try {
+        // console.log("req", req.files.thumbnailImage);
         const {
             courseName, 
             courseDescription, 
@@ -19,7 +21,7 @@ const createCourse = async (req, res) => {
             status,
             instructions
         } = req.body;
-
+        // console.log("reqFile", req.files);
         const thumbnail = req.files.thumbnailImage;
 
         if(
@@ -37,6 +39,7 @@ const createCourse = async (req, res) => {
             status = "Draft";
         }
         const userId = req.user.id;
+        console.log("user", userId);
         const instructorDetails = await User.findById(userId, {accountType: "Instructor"});
         console.log("Instructor Details", instructorDetails);
 

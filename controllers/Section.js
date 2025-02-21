@@ -49,7 +49,8 @@ const updateSection = async(req, res) => {
 }
 const deleteSection = async(req, res) => {
     try {
-        const {sectionId} = req.params;
+        const {sectionId} = req.body;
+        console.log(req.body);
         if(!sectionId){
             return sendResponse(res, 400, false, "Section id is required");
         }

@@ -31,32 +31,39 @@ const showAllCategory = async(req, res) => {
     }
 }
 const categoryPageDetails = async(req, res) => {
+    // TODO : To be updated
     try {
         const { categoryId } = req.body;
-
-        const selectedCategory = await Category.findById(categoryId).populate("courses").exec();
-        console.log(selectedCategory);
+        // console.log("Category", categoryId);
+        const selectedCategory = await Category.findById(categoryId).populate("course").exec();
+        // console.log(selectedCategory);
         
         if(!selectedCategory){
             console.log("category not found");
             return sendResponse(res, 404, false, "Category not found");
         }
-        if(selectedCategory.courses.length === 0){
+        if(selectedCategory.course.length === 0){
             return sendResponse(res, 404, false, "No course found for this category");
         }
-        const selectedCourse = await selectedCategory.courses;
+        const selectedCourse = selectedCategory.course;
+        // console.log("selectedC Course",selectedCourse);
 
         const categoriesExceptSelected = await Course.find(
                                                 {_id: {$ne: categoryId}
-                                            }).populate("courses");
+                                            }).populate("category");
+
+        // console.log("cat exp sel ",categoriesExceptSelected);
 
         let differentCourses = []
 
         for(const category of categoriesExceptSelected){
-            differentCourses.push(...category.courses);
+            if (category.category.course) {
+                differentCourses.push(...category.category.course);
+            }        
         }
-        const allCategories = await Category.find({}).populate("courses");
-        const allCourses = allCategories.flatMap((category) => category.courses);
+        // console.log("diff Course",differentCourses);
+        const allCategories = await Category.find({}).populate("course");
+        const allCourses = allCategories.flatMap((category) => category.course);
         const mostSellingCourses = allCourses.sort((a,b) => b.sold - a.sold).slice(0,10);
 
         return res.status(200).json({

@@ -2,20 +2,22 @@ import sendResponse from "../utlis/sendResponse.js";
 import uploadImageOnCloudinary from '../utlis/imageUploader.js';
 import Subsection from "../models/SubSection.js";
 import Section from "../models/Section.js";
+import { updateSection } from "./Section.js";
 
 const createSubsection = async(req, res) => {
     try {
-        const {sectionId, title, timeDuration, description} = req.body;
+        const {sectionId, title, description} = req.body;
         const video = req.files.videoFile;
-
-        if(!sectionId || !title || !timeDuration || !description || !video){
+        console.log("video",video)
+        if(!sectionId || !title || !description || !video){
             return sendResponse(res, 400, false, "All fields are required");
         }
+        console.log("filename", process.env.FOLDER_NAME);
         const uploadsDetails = await uploadImageOnCloudinary(video, process.env.FOLDER_NAME);
-
+        console.log("uploades on cloud", uploadsDetails)
         const subsectionDetails = await Subsection.create({
             title: title,
-            timeDuration: timeDuration,
+            timeDuration: `${uploadsDetails.duration}`,
             description: description,
             videoUrl: uploadsDetails.secure_url,
         });
@@ -36,21 +38,23 @@ const createSubsection = async(req, res) => {
 }
 const updateSubsection = async(req, res) => {
     try {
-        const {title, description, timeDuration, subSectionId} = req.body;
-        const video = req.files.videoFile;
+        const {title, description, subSectionId} = req.body;
+        const video = req.files?.videoFile;
 
         if(!subSectionId){
-            return sendResponse(res, 400, false, "Subsection is required");
+            return sendResponse(res, 400, false, "Subsection id is required");
         }
-        if(!title && !description && !timeDuration && !video){
+        if(!title && !description && !video){
             return sendResponse(res, 400, false, "At least on fields is required");
         }
-        const updateVideo = await uploadImageOnCloudinary(video, process.env.FOLDER_NAME);
-
+        let updateVideo = '';
+        if(video){
+            updateVideo = await uploadImageOnCloudinary(video, process.env.FOLDER_NAME);
+        }
         const updateFields = {
             ...(title && {title}),
             ...(description && {description}),
-            ...(timeDuration && {timeDuration}),
+            ...(updateVideo && `${updateVideo.duration}`),
             ...Section(updateVideo && {updateVideo})
         }
 
