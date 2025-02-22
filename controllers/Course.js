@@ -7,31 +7,34 @@ import Section from "../models/Section.js";
 import SubSection from "../models/SubSection.js";
 import convertSecondsToDuration from '../utlis/secToDuration.js';
 
-
+// Done : updated
 const createCourse = async (req, res) => {
     try {
         // console.log("req", req.files.thumbnailImage);
-        const {
+        let {
             courseName, 
             courseDescription, 
             whatYouWillLearn, 
             price, 
-            tag, 
+            tag: _tag, 
             category, 
             status,
-            instructions
+            instructions: _instrctions
         } = req.body;
         // console.log("reqFile", req.files);
         const thumbnail = req.files.thumbnailImage;
 
+        const tag = JSON.parse(_tag);
+        const instructions = JSON.parse(_instrctions);
         if(
             !courseName || 
             !courseDescription || 
             !whatYouWillLearn || 
             !price ||  
             !thumbnail ||
-            !tag ||
-            !category
+            !tag.length ||
+            !category ||
+            !instructions.length
         ) {
             return sendResponse(res, 400, false, "All fields are required");
         }
@@ -41,7 +44,7 @@ const createCourse = async (req, res) => {
         const userId = req.user.id;
         console.log("user", userId);
         const instructorDetails = await User.findById(userId, {accountType: "Instructor"});
-        console.log("Instructor Details", instructorDetails);
+        // console.log("Instructor Details", instructorDetails);
 
         if(!instructorDetails){
             return sendResponse(res, 400, false, "Instructor details not found");
@@ -58,11 +61,11 @@ const createCourse = async (req, res) => {
             instructor: instructorDetails._id,
             whatYouWillLearn: whatYouWillLearn,
             price,
-            tag: tag,
+            tag,
             category: categoryDetails._id,
             thumbnail: thumbnailImage.secure_url,
             status: status,
-            instructions: instructions
+            instructions
         });
 
         await User.findByIdAndUpdate(
@@ -92,7 +95,7 @@ const createCourse = async (req, res) => {
 const showAllCourses = async(req, res) => {
     try {
         const allCourses = await Course.find(
-            {},
+            { status: "Published"},
             {
                 courseName: true,
                 price: true,
@@ -101,7 +104,9 @@ const showAllCourses = async(req, res) => {
                 ratingAndReviews: true,
                 studentsEnrolled: true,
             }
-        ).populate("instructor").exec();
+        )
+        .populate("instructor")
+        .exec();
 
         return sendResponse(res, 200, true, "All Courses fetched successfully", allCourses);
     } catch (error) {
@@ -143,7 +148,7 @@ const editCourse = async(req, res) => {
                                         .populate({
                                             path: "instructor",
                                             populate: {
-                                                path: "addictionalDetails"
+                                                path: "additionalDetails"
                                             }
                                         })
                                         .populate("category")
@@ -232,11 +237,10 @@ const getFullCourseDetails = async(req, res) => {
                                     path: "courseContent",
                                     populate: {
                                         path: "subSection",
-                                        select: "-videoUrl"
+
                                     }
                                 })
                                 .exec();
-
 
         if(!courseDetails){
             return res.status(400).json({

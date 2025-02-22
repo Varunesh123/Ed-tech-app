@@ -1,6 +1,10 @@
 import Category from '../models/Category.js';
 import sendResponse from '../utlis/sendResponse.js';
-import Course from "../models/Course.js";
+
+// Done: Updated
+function getRandomInt(max){
+    return Math.floor(Math.random() * max);
+}
 
 const createCategory = async(req, res) => {
     try {
@@ -35,7 +39,13 @@ const categoryPageDetails = async(req, res) => {
     try {
         const { categoryId } = req.body;
         // console.log("Category", categoryId);
-        const selectedCategory = await Category.findById(categoryId).populate("course").exec();
+        const selectedCategory = await Category.findById(categoryId)
+                                                .populate({
+                                                    path: "course",
+                                                    match: { status: "Published"},
+                                                    populate: "ratingAndReviews"
+                                                })
+                                                .exec();
         // console.log(selectedCategory);
         
         if(!selectedCategory){
@@ -48,28 +58,50 @@ const categoryPageDetails = async(req, res) => {
         const selectedCourse = selectedCategory.course;
         // console.log("selectedC Course",selectedCourse);
 
-        const categoriesExceptSelected = await Course.find(
-                                                {_id: {$ne: categoryId}
-                                            }).populate("category");
+        const categoriesExceptSelected = await Category.find({_id: {$ne: categoryId} });
 
-        // console.log("cat exp sel ",categoriesExceptSelected);
+        let differentCategory = await Category.findOne(
+            categoriesExceptSelected[getRandomInt(categoriesExceptSelected.length)]._id
+        )
+        .populate({
+            path: "course",
+            match: {status: "Published"}
+        })
+        .exec();
 
-        let differentCourses = []
-
-        for(const category of categoriesExceptSelected){
-            if (category.category.course) {
-                differentCourses.push(...category.category.course);
-            }        
-        }
-        // console.log("diff Course",differentCourses);
-        const allCategories = await Category.find({}).populate("course");
+        const allCategories = await Category.find()
+                                        .populate({
+                                            path: "course",
+                                            match: {status: "Published"},
+                                            populate: {
+                                                path: "instructor"
+                                            }
+                                        })
+                                        .exec();
+        
         const allCourses = allCategories.flatMap((category) => category.course);
         const mostSellingCourses = allCourses.sort((a,b) => b.sold - a.sold).slice(0,10);
+        // console.log("cat exp sel ",categoriesExceptSelected);
+
+        // let differentCourses = []
+
+        // for(const category of categoriesExceptSelected){
+        //     if (category.category.course) {
+        //         differentCourses.push(...category.category.course);
+        //     }        
+        // }
+        // // console.log("diff Course",differentCourses);
+        // const allCategories = await Category.find({}).populate("course");
+        // const allCourses = allCategories.flatMap((category) => category.course);
+        // const mostSellingCourses = allCourses.sort((a,b) => b.sold - a.sold).slice(0,10);
 
         return res.status(200).json({
-            selectedCourse: selectedCourse,
-            differentCourses: differentCourses,
-            mostSellingCourses: mostSellingCourses
+            success: true,
+            data: {
+                selectedCategory,
+                differentCategory,
+                mostSellingCourses
+            }
         });
     } catch (error) {
         return sendResponse(res, 500, false, "Internal server error");

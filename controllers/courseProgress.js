@@ -2,6 +2,7 @@ import sendResponse from "../utlis/sendResponse.js";
 import Subsection from '../models/SubSection.js';
 import CourseProgress from '../models/CourseProgess.js';
 
+// Done: Latest Updated
 const updateCourseProgress = async(req, res) => {
     try {
         const {courseId, subsectionId} = req.body;

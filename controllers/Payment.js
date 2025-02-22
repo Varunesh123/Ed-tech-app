@@ -4,7 +4,7 @@ import mongoose from 'mongoose';
 import instance from '../config/razorpay.js';
 import mailSender from '../utlis/mailSender.js';
 import User from '../models/Course.js';
-
+// TODO
 const capturePayment = async(req, res) => {
     const { course_id } = req.body;
     const userId = req.user.id;

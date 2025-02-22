@@ -6,7 +6,9 @@ import jwt from 'jsonwebtoken';
 import Profile from '../models/Profile.js';
 import sendResponse from '../utlis/sendResponse.js';
 import dotenv from 'dotenv';
-
+import mailSender from '../utlis/mailSender.js';
+import passwordUpdated from "../mail/template/passwordUpdate.js";
+// Done : Fully Updated
 dotenv.config();
 
 const sendOTP = async (req, res) => {
@@ -75,7 +77,7 @@ const signUp = async (req, res) => {
         if (user) {
             return sendResponse(res, 400, false, "User already exists");
         }
-        console.log("user", user);
+        // console.log("user", user);
         const recentOtp = await OTP.find({ email }).sort({ createdAt: -1 }).limit(1);
         console.log('recentOtp', recentOtp);
         if (recentOtp.length === 0 || otp !== recentOtp[0].otp) {
@@ -84,8 +86,8 @@ const signUp = async (req, res) => {
         // console.log('recentOtp', recentOtp);
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // let approved = "";
-        // accountType === "Instructor" ? (approved = false) : (approved = true); 
+        let approved = "";
+        accountType === "Instructor" ? (approved = false) : (approved = true); 
 
         const profileDetails = await Profile.create({
             gender: null,
@@ -93,7 +95,7 @@ const signUp = async (req, res) => {
             about: null,
             contactNumber: null,
         });
-        console.log('prf', profileDetails);
+        // console.log('prf', profileDetails);
         const userData = {
             firstName,
             lastName,
@@ -101,14 +103,14 @@ const signUp = async (req, res) => {
             contactNumber,
             password: hashedPassword,
             accountType: accountType,
-            // approved: approved,
+            approved: approved,
             additionalDetails: profileDetails._id,
             image: `https://api.dicebear.com/5.x/initials/svg?seed=${firstName} ${lastName}`,
         };
         // if (req.body.googleId) {
         //     userData.googleId = req.body.googleId;
         // }
-        console.log('userdata', userData);
+        // console.log('userdata', userData);
         const newUser = await User.create(userData);
         return sendResponse(res, 200, true, "User registered successfully", newUser);
     } catch (error) {
@@ -136,8 +138,10 @@ const login = async (req, res) => {
             // console.log("payload", payload);
             // console.log("JWT_SECRET", process.env.JWT_SECRET);
 
-            const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '2h' });
+            const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '24h' });
             // console.log("token", token);
+            user.token = token;
+            user.password = undefined;
 
             const options = {
                 expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
@@ -158,14 +162,14 @@ const login = async (req, res) => {
         }
     } catch (error) {
         console.error(error);
-        return sendResponse(res, 400, false, "Login failed, please try again", error.message);
+        return sendResponse(res, 500, false, "Login failed, please try again", error.message);
     }
 };
 
 // Change Password
 const changePassword = async (req, res) => {
     try {
-        const { email, currPassword, newPassword, confirmPassword } = req.body;
+        const {currPassword, newPassword, confirmPassword } = req.body;
 
         if (!email || !currPassword || !newPassword || !confirmPassword) {
             return sendResponse(res, 403, false, "All fields are required");
@@ -174,18 +178,37 @@ const changePassword = async (req, res) => {
             return sendResponse(res, 400, false, "New passwords do not match");
         }
 
-        const user = await User.findOne({ email });
+        const user = await User.findById(req.user.id);
         if (!user) {
             return sendResponse(res, 400, false, "User not found");
         }
-
-        if (await bcrypt.compare(currPassword, user.password)) {
-            user.password = await bcrypt.hash(newPassword, 10);
-            await user.save()
-            return sendResponse(res, 200, true, "Password changed successfully", user.password);
-        } else {
-            return sendResponse(res, 400, false, "Incorrect current password");
+        // if (await bcrypt.compare(currPassword, user.password)) {
+        //     user.password = await bcrypt.hash(newPassword, 10);
+        //     await user.save()
+        //     return sendResponse(res, 200, true, "Password changed successfully", user.password);
+        // } else {
+        //     return sendResponse(res, 400, false, "Incorrect current password");
+        // }
+        const encryptedPassword = await bcrypt.hash(newPassword, 10);
+        const updatedUserDetails = await User.findByIdAndUpdate((
+            req.user.id,
+            {password: encryptedPassword},
+            {new: true}
+        ));
+        try{
+            const emailResponse = await mailSender(
+                updatedUserDetails.email,
+                passwordUpdated(
+                    updatedUserDetails.email,
+                    `Password updated successfully for ${updatedUserDetails.firstName} ${updatedUserDetails.lastName}`
+                )
+            );
+            console.log("Email sent successfully:", emailResponse.response)
+        } catch (error) {
+            console.log("Error occurred while sending email:", error);
+            return sendResponse(res, 500, false, "Error occurred while sending email", error.message)
         }
+        return sendResponse(res, 200, true, "Password updated successfully");
     } catch (error) {
         console.error(error);
         return sendResponse(res, 500, false, "Unable to change password");
